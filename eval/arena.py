@@ -38,8 +38,9 @@ DEFAULT_BASE_URL = "https://integrate.api.nvidia.com/v1"
 # after that the runner picks chat models from the endpoint's live /models list, in this order.
 DEFAULT_MODELS = ""
 PREFERRED_PATTERNS = [
-    r"deepseek-v\d", r"nemotron.*super", r"llama-3\.3-70b", r"qwen3.*(instruct|a\d+b)", r"mistral-large",
-    r"kimi", r"glm", r"llama-4", r"gpt-oss", r"nemotron", r"llama.*70b", r"instruct",
+    r"llama-3\.3-70b", r"llama-4", r"qwen3.*(instruct|a\d+b)", r"nemotron.*(super|nano)", r"flash",
+    r"deepseek-v\d", r"mistral-(medium|small)", r"gemma", r"glm", r"kimi", r"mistral-large", r"gpt-oss",
+    r"nemotron", r"llama.*(70b|8b)", r"instruct",
 ]
 NON_CHAT = re.compile(r"embed|rerank|guard|safety|reward|vision|-vl|vlm|parse|ocr|clip|retriev|coder|"
                       r"translate|asr|tts|audio|image|detector|pii|nemoretriever|bge|e5-|sdxl|flux", re.I)
@@ -73,17 +74,49 @@ class LLM:
         if catalog:
             print(f"Endpoint lists {len(catalog)} models", file=sys.stderr)
             listed = [m for m in configured if m in catalog]
-            self.models = listed + [m for m in rank_catalog(catalog) if m not in listed][:12]
+            candidates = listed + [m for m in rank_catalog(catalog) if m not in listed][:25]
         else:
-            self.models = configured
-        if not self.models:
+            candidates = configured
+        if not candidates:
             sys.exit("No usable model: set LLM_MODEL (the endpoint did not return a model list).")
-        print(f"Model candidates: {', '.join(self.models[:5])}", file=sys.stderr)
+        self.models = self.probe(candidates)
+        if not self.models:
+            sys.exit("None of the candidate models answered. Set LLM_MODEL to a model that works on your key.")
+        print(f"Using: {', '.join(self.models)}", file=sys.stderr)
         self.model = self.models[0]
         self.min_interval = float(env("LLM_MIN_INTERVAL", "2"))
         self.timeout = float(env("LLM_TIMEOUT", "240"))
         self._last_call = 0.0
         self.calls = 0
+
+    def probe(self, candidates, want=4, timeout=45):
+        """Free tiers list many models that are 404 or stuck in a queue. Send each a tiny request and
+        keep the ones that actually answer, fastest first."""
+        answered = []
+        for model in candidates:
+            request = urllib.request.Request(
+                f"{self.base_url}/chat/completions",
+                data=json.dumps({"model": model, "max_tokens": 16,
+                                 "messages": [{"role": "user", "content": "Reply with OK."}]}).encode(),
+                headers={"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"},
+            )
+            started = time.time()
+            try:
+                with urllib.request.urlopen(request, timeout=timeout) as response:
+                    json.load(response)
+                latency = time.time() - started
+                answered.append((latency, model))
+                print(f"  probe {model}: {latency:.1f}s", file=sys.stderr)
+            except urllib.error.HTTPError as error:
+                print(f"  probe {model}: HTTP {error.code}", file=sys.stderr)
+                if error.code == 429:
+                    time.sleep(10)
+            except Exception as error:
+                print(f"  probe {model}: {type(error).__name__}", file=sys.stderr)
+            if len(answered) >= want:
+                break
+            time.sleep(self.min_interval)
+        return [model for _, model in sorted(answered)]
 
     def list_models(self):
         request = urllib.request.Request(f"{self.base_url}/models",
