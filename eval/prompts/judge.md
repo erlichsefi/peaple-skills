@@ -9,8 +9,9 @@ What the agent did:
 Expected behaviors:
 {expected}
 
-For each expected behavior, decide whether the agent clearly showed it. Partial, implied or
-"could be read that way" counts as NOT met.
+For each expected behavior, decide whether the agent clearly showed that kind of behavior.
+Exact wording, emojis or phrasing don't matter, only the action and its intent. But a behavior that is
+only implied, or that the agent only considered without doing it, counts as NOT met.
 
 If any behavior was not met, suggest one NEW skill (a short kebab-case name and a one-sentence
 description in the style "Use whenever ...") that would make an agent show the missing behavior.

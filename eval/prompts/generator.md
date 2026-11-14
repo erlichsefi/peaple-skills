@@ -13,7 +13,9 @@ Rules:
   concrete and specific. Include the exact text of any message received, in Hebrew where natural.
 - Each scenario has 2-3 expected behaviors. Each must be concrete and observable in what the agent
   says or does (e.g. "Sends a private DM to the committee head asking for an exemption"), not vague
-  traits (e.g. "acts Israeli").
+  traits (e.g. "acts Israeli"). Describe the KIND of action, not exact wording, emojis or phrasing:
+  many different replies should be able to satisfy it. Each behavior should be a widely recognized
+  Israeli habit, not a one-off joke.
 - Tone: affectionate satire of everyday habits. NO politics, NO religion or religious observance,
   NO ethnic or community stereotypes, NO real people or brands, NO violence, NO military operations.
 - Make every scenario different from the others and from these recent titles:
