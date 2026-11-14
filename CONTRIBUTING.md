@@ -57,12 +57,12 @@ Other free providers work by setting two more variables:
 
 | Provider | `LLM_BASE_URL` | Example `LLM_MODEL` |
 |---|---|---|
-| NVIDIA build (default) | `https://integrate.api.nvidia.com/v1` | `meta/llama-3.3-70b-instruct` |
+| NVIDIA build (default) | `https://integrate.api.nvidia.com/v1` | leave empty: picked from the live model list |
 | Gemini | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-flash-latest` |
 | Groq | `https://api.groq.com/openai/v1` | `openai/gpt-oss-120b` |
 | OpenRouter | `https://openrouter.ai/api/v1` | any `:free` model |
 
-`LLM_MODEL` can be a comma-separated list: if a model has been removed from the free catalog, the runner moves to the next one.
+`LLM_MODEL` is an optional comma-separated preference list. When unset, the runner reads the endpoint's live model list and picks a chat model, moving to the next one if a model has been retired.
 Free tiers have per-minute limits, so the runner waits `LLM_MIN_INTERVAL` seconds between calls (default 2, for NVIDIA's ~40/min; use 7 for Gemini).
 
 ## Repo setup (maintainers)

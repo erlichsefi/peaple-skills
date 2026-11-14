@@ -8,7 +8,7 @@ Commands:
 Works with any OpenAI-compatible chat completions endpoint. Configure with env vars:
   LLM_API_KEY    (required)
   LLM_BASE_URL   default: NVIDIA build (https://integrate.api.nvidia.com/v1), free tier
-  LLM_MODEL      comma-separated list; the first model that exists on the endpoint is used
+  LLM_MODEL      optional comma-separated preference list; otherwise picked from the live model list
   LLM_MIN_INTERVAL  seconds between calls, default 2 (NVIDIA free tier is ~40 requests/minute)
 
 Standard library only, so it runs anywhere without installing anything.
@@ -33,8 +33,24 @@ RESULTS_DIR = ROOT / "results"
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 DEFAULT_BASE_URL = "https://integrate.api.nvidia.com/v1"
-# Free-tier catalogs change; the runner falls through this list until a model answers.
-DEFAULT_MODELS = "meta/llama-3.3-70b-instruct,deepseek-ai/deepseek-v3.2,openai/gpt-oss-120b"
+# Free-tier catalogs change often. Models named in LLM_MODEL are tried first (if still listed);
+# after that the runner picks chat models from the endpoint's live /models list, in this order.
+DEFAULT_MODELS = ""
+PREFERRED_PATTERNS = [
+    r"deepseek-v\d", r"nemotron.*super", r"llama-3\.3-70b", r"qwen3.*(instruct|a\d+b)", r"mistral-large",
+    r"kimi", r"glm", r"llama-4", r"gpt-oss", r"nemotron", r"llama.*70b", r"instruct",
+]
+NON_CHAT = re.compile(r"embed|rerank|guard|safety|reward|vision|-vl|vlm|parse|ocr|clip|retriev|coder|"
+                      r"translate|asr|tts|audio|image|detector|pii|nemoretriever|bge|e5-|sdxl|flux", re.I)
+
+
+def rank_catalog(ids):
+    ranked = []
+    for pattern in PREFERRED_PATTERNS:
+        for model_id in sorted(ids, reverse=True):  # reverse: newer versions tend to sort later
+            if model_id not in ranked and not NON_CHAT.search(model_id) and re.search(pattern, model_id, re.I):
+                ranked.append(model_id)
+    return ranked
 MAX_SKILLS_PER_SCENARIO = 3
 
 
@@ -51,11 +67,31 @@ class LLM:
         if not self.api_key:
             sys.exit("LLM_API_KEY is not set. See CONTRIBUTING.md for free providers.")
         self.base_url = env("LLM_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
-        self.models = [m.strip() for m in env("LLM_MODEL", DEFAULT_MODELS).split(",") if m.strip()]
+        configured = [m.strip() for m in env("LLM_MODEL", DEFAULT_MODELS).split(",") if m.strip()]
+        catalog = self.list_models()
+        if catalog:
+            print(f"Endpoint lists {len(catalog)} models", file=sys.stderr)
+            listed = [m for m in configured if m in catalog]
+            self.models = listed + [m for m in rank_catalog(catalog) if m not in listed][:12]
+        else:
+            self.models = configured
+        if not self.models:
+            sys.exit("No usable model: set LLM_MODEL (the endpoint did not return a model list).")
+        print(f"Model candidates: {', '.join(self.models[:5])}", file=sys.stderr)
         self.model = self.models[0]
         self.min_interval = float(env("LLM_MIN_INTERVAL", "2"))
         self._last_call = 0.0
         self.calls = 0
+
+    def list_models(self):
+        request = urllib.request.Request(f"{self.base_url}/models",
+                                         headers={"Authorization": f"Bearer {self.api_key}"})
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return {m["id"] for m in json.load(response).get("data", []) if m.get("id")}
+        except Exception as error:  # some providers don't expose /models; fall back to LLM_MODEL
+            print(f"Could not list models: {error}", file=sys.stderr)
+            return set()
 
     def chat(self, messages, temperature=0.2):
         wait = self.min_interval - (time.time() - self._last_call)
@@ -88,8 +124,8 @@ class LLM:
                 return re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
             except urllib.error.HTTPError as error:
                 detail = error.read().decode(errors="replace")[:500]
-                if error.code in (400, 404, 410) and len(self.models) > 1 and (
-                        error.code != 400 or "model" in detail.lower()):
+                if error.code in (400, 403, 404, 410, 422) and len(self.models) > 1 and (
+                        error.code in (404, 410) or "model" in detail.lower() or "function" in detail.lower()):
                     dropped = self.models.pop(0)
                     self.model = self.models[0]
                     print(f"  model {dropped} unavailable (HTTP {error.code}), switching to {self.model}",
