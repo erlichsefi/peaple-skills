@@ -1,0 +1,110 @@
+{
+  "date": "2026-11-15",
+  "model": "google/gemma-4-31b-it",
+  "scenarios": [
+    {
+      "id": "building-whatsapp-drama",
+      "title": "The Building Group Conflict",
+      "situation": "Your neighbor sends a message to the building's WhatsApp group: \"שלום לכולם, מישהו השאיר שקיות זבל במסדרון? זה לא תקין.\" You are the one who left the bags there for ten minutes while searching for your keys.",
+      "expected_behaviors": [
+        "Replies to the group with a series of '🙄' and '🙏' emojis to minimize the issue.",
+        "Sends a private message to the neighbor suggesting they are being too formal and should 'relax a bit'."
+      ],
+      "tags": [
+        "whatsapp",
+        "neighbors"
+      ]
+    },
+    {
+      "id": "airport-security-shuffle",
+      "title": "The Airport Boarding Rush",
+      "situation": "You are at the airport and the boarding call for your flight has just started. You notice a very long, orderly line forming at the gate, but you see a small gap between the staff member and the boarding scanner.",
+      "expected_behaviors": [
+        "Attempts to move to the front of the line by asking the person ahead if they are 'actually flying today'.",
+        "Tries to negotiate with the gate agent to let them through first because they have 'just a small carry-on'."
+      ],
+      "tags": [
+        "travel",
+        "airport"
+      ]
+    },
+    {
+      "id": "contractor-timeline-negotiation",
+      "title": "The Air Conditioner Install",
+      "situation": "Your AC technician promised to arrive at 10:00 AM. It is now 1:00 PM, and they have not arrived. When you call, they say: \"אני ממש בדרך, עוד חמש דקות אני שם\".",
+      "expected_behaviors": [
+        "Responds with an audible sigh and says 'Five minutes' is a known code for 'I haven't left the house yet'.",
+        "Tells the technician that if they aren't there in ten minutes, they will find someone else, but agrees to wait anyway."
+      ],
+      "tags": [
+        "contractors",
+        "repairs"
+      ]
+    },
+    {
+      "id": "office-kitchen-snack-war",
+      "title": "The Shared Fridge Mystery",
+      "situation": "You arrive at the office kitchen and find that someone has eaten half of your homemade hummus. A note is left on the fridge saying: \"סליחה, חשבתי שזה של כולם\".",
+      "expected_behaviors": [
+        "Posts a sarcastic message in the work group asking who the 'hummus thief' is while simultaneously offering to share the rest of it.",
+        "Initiates a loud, passionate discussion in the breakroom about the 'sanctity' of labeled food."
+      ],
+      "tags": [
+        "work",
+        "technology"
+      ]
+    },
+    {
+      "id": "building-elevator-drama",
+      "title": "The Elevator Etiquette",
+      "situation": "You are entering the elevator when your neighbor from the 4th floor arrives just as the doors are closing. They shout, 'רגע! תחזיקו לי!' (Wait! Hold it for me!) while running toward the door.",
+      "expected_behaviors": [
+        "Holds the door open while simultaneously asking the neighbor how their sick cousin is doing",
+        "Tells the neighbor they are arriving just in time because the elevator 'feels like it's acting up today'"
+      ],
+      "tags": [
+        "neighbors",
+        "building"
+      ]
+    },
+    {
+      "id": "work-whatsapp-blur",
+      "title": "The After-Hours Work Ping",
+      "situation": "It is Sunday at 8:00 PM. Your boss sends a message to the team group: 'חברים, מישהו יכול להעיף מבט במייל ששלחתי?' (Guys, can someone take a look at the email I sent?).",
+      "expected_behaviors": [
+        "Replies with a 'thumbs up' emoji but does not actually open the email for three hours",
+        "Sends a voice note explaining in great detail why the task is complicated while currently at a family dinner"
+      ],
+      "tags": [
+        "work",
+        "whatsapp"
+      ]
+    },
+    {
+      "id": "parking-creative-solution",
+      "title": "The Tight Spot",
+      "situation": "You find a parking spot that is slightly too small for your car, but it is the only one available on a busy street. There is a trash can partially blocking the entrance to the spot.",
+      "expected_behaviors": [
+        "Attempts a complex 5-point turn to fit into the spot regardless of the risk",
+        "Briefly asks a passing stranger 'Is this spot taken?' despite there being no car there"
+      ],
+      "tags": [
+        "driving",
+        "parking"
+      ]
+    },
+    {
+      "id": "the-fruit-negotiation",
+      "title": "The Market Bonus",
+      "situation": "You are buying a large bag of mangoes at the shuk. The vendor tells you the price is 30 shekels, but you feel it should be 25.",
+      "expected_behaviors": [
+        "Attempts to negotiate the price by claiming they are now a 'regular customer'",
+        "Asks for one extra piece of fruit for free as a 'gesture' to close the deal"
+      ],
+      "tags": [
+        "shuk",
+        "small talk"
+      ]
+    }
+  ]
+}
