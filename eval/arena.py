@@ -7,9 +7,9 @@ Commands:
 
 Works with any OpenAI-compatible chat completions endpoint. Configure with env vars:
   LLM_API_KEY    (required)
-  LLM_BASE_URL   default: Gemini API's OpenAI-compatible endpoint
-  LLM_MODEL      default: gemini-flash-latest
-  LLM_MIN_INTERVAL  seconds between calls, default 7 (keeps under free-tier RPM limits)
+  LLM_BASE_URL   default: NVIDIA build (https://integrate.api.nvidia.com/v1), free tier
+  LLM_MODEL      comma-separated list; the first model that exists on the endpoint is used
+  LLM_MIN_INTERVAL  seconds between calls, default 2 (NVIDIA free tier is ~40 requests/minute)
 
 Standard library only, so it runs anywhere without installing anything.
 """
@@ -32,8 +32,9 @@ SCENARIOS_DIR = ROOT / "scenarios"
 RESULTS_DIR = ROOT / "results"
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
-DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
-DEFAULT_MODEL = "gemini-flash-latest"
+DEFAULT_BASE_URL = "https://integrate.api.nvidia.com/v1"
+# Free-tier catalogs change; the runner falls through this list until a model answers.
+DEFAULT_MODELS = "meta/llama-3.3-70b-instruct,deepseek-ai/deepseek-v3.2,openai/gpt-oss-120b"
 MAX_SKILLS_PER_SCENARIO = 3
 
 
@@ -50,8 +51,9 @@ class LLM:
         if not self.api_key:
             sys.exit("LLM_API_KEY is not set. See CONTRIBUTING.md for free providers.")
         self.base_url = env("LLM_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
-        self.model = env("LLM_MODEL", DEFAULT_MODEL)
-        self.min_interval = float(env("LLM_MIN_INTERVAL", "7"))
+        self.models = [m.strip() for m in env("LLM_MODEL", DEFAULT_MODELS).split(",") if m.strip()]
+        self.model = self.models[0]
+        self.min_interval = float(env("LLM_MIN_INTERVAL", "2"))
         self._last_call = 0.0
         self.calls = 0
 
@@ -60,39 +62,51 @@ class LLM:
         if wait > 0:
             time.sleep(wait)
 
-        body = json.dumps({
-            "model": self.model,
-            "messages": messages,
-            "temperature": temperature,
-        }).encode()
-        request = urllib.request.Request(
-            f"{self.base_url}/chat/completions",
-            data=body,
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            },
-        )
-
-        for attempt in range(6):
+        attempt = 0
+        while True:
+            request = urllib.request.Request(
+                f"{self.base_url}/chat/completions",
+                data=json.dumps({
+                    "model": self.model,
+                    "messages": messages,
+                    "temperature": temperature,
+                    "max_tokens": 2048,
+                }).encode(),
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                    "Accept": "application/json",
+                },
+            )
             self._last_call = time.time()
             try:
                 with urllib.request.urlopen(request, timeout=120) as response:
                     data = json.load(response)
                 self.calls += 1
-                return data["choices"][0]["message"]["content"] or ""
+                content = data["choices"][0]["message"].get("content") or ""
+                # reasoning models may include their thinking inline
+                return re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
             except urllib.error.HTTPError as error:
+                detail = error.read().decode(errors="replace")[:500]
+                if error.code in (400, 404, 410) and len(self.models) > 1 and (
+                        error.code != 400 or "model" in detail.lower()):
+                    dropped = self.models.pop(0)
+                    self.model = self.models[0]
+                    print(f"  model {dropped} unavailable (HTTP {error.code}), switching to {self.model}",
+                          file=sys.stderr)
+                    continue
                 if error.code in (429, 500, 502, 503, 504) and attempt < 5:
                     retry_after = error.headers.get("Retry-After")
                     delay = float(retry_after) if retry_after and retry_after.isdigit() else 10 * 2 ** attempt
                     print(f"  LLM HTTP {error.code}, retrying in {delay:.0f}s", file=sys.stderr)
                     time.sleep(delay)
+                    attempt += 1
                     continue
-                detail = error.read().decode(errors="replace")[:500]
                 raise RuntimeError(f"LLM request failed: HTTP {error.code}: {detail}") from error
             except urllib.error.URLError as error:
                 if attempt < 5:
                     time.sleep(10 * 2 ** attempt)
+                    attempt += 1
                     continue
                 raise RuntimeError(f"LLM request failed: {error}") from error
 

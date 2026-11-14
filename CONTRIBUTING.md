@@ -48,7 +48,7 @@ Tips:
 You need a free API key from any OpenAI-compatible provider. Standard library Python only, nothing to install.
 
 ```bash
-export LLM_API_KEY=...                       # Gemini API key from Google AI Studio (default provider)
+export LLM_API_KEY=nvapi-...                 # free key from build.nvidia.com (default provider)
 python eval/arena.py evaluate --limit 3      # run the latest scenarios against your skills
 python eval/arena.py generate --count 3      # make new scenarios (writes scenarios/<date>.json)
 ```
@@ -57,15 +57,17 @@ Other free providers work by setting two more variables:
 
 | Provider | `LLM_BASE_URL` | Example `LLM_MODEL` |
 |---|---|---|
-| Gemini (default) | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-flash-latest` |
+| NVIDIA build (default) | `https://integrate.api.nvidia.com/v1` | `meta/llama-3.3-70b-instruct` |
+| Gemini | `https://generativelanguage.googleapis.com/v1beta/openai` | `gemini-flash-latest` |
 | Groq | `https://api.groq.com/openai/v1` | `openai/gpt-oss-120b` |
 | OpenRouter | `https://openrouter.ai/api/v1` | any `:free` model |
 
-Free tiers have per-minute limits, so the runner waits `LLM_MIN_INTERVAL` seconds between calls (default 7).
+`LLM_MODEL` can be a comma-separated list: if a model has been removed from the free catalog, the runner moves to the next one.
+Free tiers have per-minute limits, so the runner waits `LLM_MIN_INTERVAL` seconds between calls (default 2, for NVIDIA's ~40/min; use 7 for Gemini).
 
 ## Repo setup (maintainers)
 
-- Add a repository secret `LLM_API_KEY`.
+- Add a repository secret `LLM_API_KEY` with an NVIDIA build key (`nvapi-...`).
 - Settings → Pages → Source: **GitHub Actions** (publishes the results site).
 - Optional repository variables `LLM_BASE_URL` and `LLM_MODEL` to switch provider or model.
 - PRs from forks don't get secrets, so the PR arena skips them. A maintainer can run it locally,
