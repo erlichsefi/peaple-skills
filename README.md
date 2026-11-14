@@ -12,6 +12,7 @@ Israeli citizens have skills too. Nobody wrote them down. Until now.
 | Skill | What it does |
 |---|---|
 | [ask-to-be-excused](skills/ask-to-be-excused/SKILL.md) | When a rule is announced to a group, privately DM the person who announced it and ask to be excused. |
+| [not-written-not-forbidden](skills/not-written-not-forbidden/SKILL.md) | If a rule doesn't explicitly forbid it, it's allowed. Find the gray area and move in. |
 
 ## Structure
 
