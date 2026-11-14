@@ -9,6 +9,7 @@ Works with any OpenAI-compatible chat completions endpoint. Configure with env v
   LLM_API_KEY    (required)
   LLM_BASE_URL   default: NVIDIA build (https://integrate.api.nvidia.com/v1), free tier
   LLM_MODEL      optional comma-separated preference list; otherwise picked from the live model list
+  LLM_TIMEOUT    seconds to wait for one reply, default 240
   LLM_MIN_INTERVAL  seconds between calls, default 2 (NVIDIA free tier is ~40 requests/minute)
 
 Standard library only, so it runs anywhere without installing anything.
@@ -80,6 +81,7 @@ class LLM:
         print(f"Model candidates: {', '.join(self.models[:5])}", file=sys.stderr)
         self.model = self.models[0]
         self.min_interval = float(env("LLM_MIN_INTERVAL", "2"))
+        self.timeout = float(env("LLM_TIMEOUT", "240"))
         self._last_call = 0.0
         self.calls = 0
 
@@ -116,7 +118,7 @@ class LLM:
             )
             self._last_call = time.time()
             try:
-                with urllib.request.urlopen(request, timeout=120) as response:
+                with urllib.request.urlopen(request, timeout=self.timeout) as response:
                     data = json.load(response)
                 self.calls += 1
                 content = data["choices"][0]["message"].get("content") or ""
@@ -139,6 +141,19 @@ class LLM:
                     attempt += 1
                     continue
                 raise RuntimeError(f"LLM request failed: HTTP {error.code}: {detail}") from error
+            except (TimeoutError, ConnectionError) as error:
+                # slow or overloaded model: try once more, then move to the next candidate
+                if attempt < 1:
+                    attempt += 1
+                    print(f"  {self.model} timed out, retrying", file=sys.stderr)
+                    continue
+                if len(self.models) > 1:
+                    dropped = self.models.pop(0)
+                    self.model = self.models[0]
+                    attempt = 0
+                    print(f"  model {dropped} too slow ({error}), switching to {self.model}", file=sys.stderr)
+                    continue
+                raise RuntimeError(f"LLM request failed: {error}") from error
             except urllib.error.URLError as error:
                 if attempt < 5:
                     time.sleep(10 * 2 ** attempt)
@@ -221,10 +236,18 @@ def cmd_generate(args):
     llm = LLM()
     titles = recent_titles()
     titles_text = "\n".join(f"- {t}" for t in titles) or "- (none yet)"
-    data = ask_json(llm, prompt("generator", count=args.count, recent_titles=titles_text), temperature=1.0)
+    raw_scenarios = []
+    remaining = args.count
+    while remaining > 0:  # small batches keep each reply short enough for slow free endpoints
+        batch = min(4, remaining)
+        known = titles + [str(r.get("title", "")) for r in raw_scenarios]
+        known_text = "\n".join(f"- {t}" for t in known) or titles_text
+        data = ask_json(llm, prompt("generator", count=batch, recent_titles=known_text), temperature=1.0)
+        raw_scenarios += data.get("scenarios", [])[:batch]
+        remaining -= batch
 
     scenarios, seen = [], set()
-    for raw in data.get("scenarios", []):
+    for raw in raw_scenarios:
         if not raw.get("situation") or not raw.get("expected_behaviors"):
             continue
         sid = re.sub(r"[^a-z0-9-]+", "-", str(raw.get("id") or raw.get("title", "scenario")).lower()).strip("-")
