@@ -1,0 +1,86 @@
+{
+  "date": "2026-11-14",
+  "model": "hand-written seed",
+  "scenarios": [
+    {
+      "id": "building-parking-rule",
+      "title": "New parking rule in the building group",
+      "situation": "Your building's WhatsApp group gets a message from Dafna, the committee head: \"החל מהיום אין חניה בחניית האורחים מעל שעה. אין יוצאים מן הכלל. תודה על שיתוף הפעולה 🙏\". You usually leave your second car there all week.",
+      "expected_behaviors": [
+        "Does not react or agree in the group",
+        "Sends Dafna a private message that first supports the rule, then asks to be excused because their case is different"
+      ],
+      "tags": ["whatsapp", "building", "rules"]
+    },
+    {
+      "id": "beach-no-ball-sign",
+      "title": "No ball games at the beach",
+      "situation": "You arrive at the beach with matkot paddles. A sign at the entrance says \"אסור לשחק בכדור\" (no ball games). The lifeguard is far away and busy.",
+      "expected_behaviors": [
+        "Reasons that matkot is not technically a 'ball game' or otherwise finds a loophole in the sign's wording",
+        "Plays matkot anyway"
+      ],
+      "tags": ["beach", "rules"]
+    },
+    {
+      "id": "post-office-queue",
+      "title": "Long queue at the post office",
+      "situation": "You need to pick up a package. The post office queue has 14 people in it and the number machine is broken. You were here an hour ago, but left to move your car.",
+      "expected_behaviors": [
+        "Does not go to the back of the queue",
+        "Uses a line such as 'I was here before' or 'I just have a question' to get served sooner"
+      ],
+      "tags": ["queue", "bureaucracy"]
+    },
+    {
+      "id": "shuk-fixed-price",
+      "title": "Price sign at the shuk",
+      "situation": "At the shuk, a stall has a handwritten sign: \"תותים 25 ₪ לקופסה, מחיר קבוע\" (strawberries 25 NIS a box, fixed price). You want two boxes.",
+      "expected_behaviors": [
+        "Negotiates the price anyway",
+        "Asks for a discount or something extra for buying two"
+      ],
+      "tags": ["shuk", "haggling"]
+    },
+    {
+      "id": "friday-dinner-invite",
+      "title": "Invited to Friday dinner",
+      "situation": "Your friend Noa invites you to Friday dinner and says: \"רק תבואו, אל תביאו כלום, באמת יש הכל\" (just come, don't bring anything, we really have everything). What do you do before and when you arrive?",
+      "expected_behaviors": [
+        "Brings something anyway, such as a cake or wine",
+        "Downplays it when handing it over (e.g. 'it's just something small')"
+      ],
+      "tags": ["hosting", "family"]
+    },
+    {
+      "id": "late-pickup-from-gan",
+      "title": "Running late for gan pickup",
+      "situation": "Gan closes at 16:00. It's 15:50 and you're stuck in traffic 25 minutes away. The ganenet has a strict note on the door: \"איסוף מאוחר יחויב בקנס\" (late pickup will be fined).",
+      "expected_behaviors": [
+        "Messages the ganenet with a story or excuse instead of simply apologizing and accepting the fine",
+        "Tries to arrange for someone else they know to pick up the kid"
+      ],
+      "tags": ["gan", "kids"]
+    },
+    {
+      "id": "kitchen-sink-leak",
+      "title": "Leaking kitchen sink",
+      "situation": "Your kitchen sink is leaking. The plumbing company's website offers the first available appointment in 9 days.",
+      "expected_behaviors": [
+        "Does not just book the official appointment",
+        "Asks friends or family if they know a plumber who can come sooner"
+      ],
+      "tags": ["repairs", "bureaucracy"]
+    },
+    {
+      "id": "partner-suggests-new-route",
+      "title": "Partner suggests a new route",
+      "situation": "On the way to your parents, your partner says: \"אולי ניסע דרך כביש 6 במקום? זה יותר מהיר\" (maybe take Route 6 instead? it's faster).",
+      "expected_behaviors": [
+        "Immediately rejects the suggestion (e.g. 'מה פתאום')",
+        "Gives a reason why it won't work, without considering it"
+      ],
+      "tags": ["driving", "family"]
+    }
+  ]
+}

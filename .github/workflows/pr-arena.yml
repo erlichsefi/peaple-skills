@@ -1,0 +1,71 @@
+name: PR arena
+
+# On pull requests that change skills: rerun the latest scenarios with the PR's skills
+# and compare against the last daily score.
+on:
+  pull_request:
+    paths:
+      - "skills/**"
+      - "eval/**"
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-arena-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  arena:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+      LLM_BASE_URL: ${{ vars.LLM_BASE_URL }}
+      LLM_MODEL: ${{ vars.LLM_MODEL }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check LLM key
+        id: key
+        run: |
+          if [ -z "$LLM_API_KEY" ]; then
+            echo "No LLM_API_KEY available (PRs from forks don't get secrets). Skipping." >> "$GITHUB_STEP_SUMMARY"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          elif ! ls scenarios/*.json >/dev/null 2>&1; then
+            echo "No scenarios yet. Skipping." >> "$GITHUB_STEP_SUMMARY"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Evaluate PR skills on latest scenarios
+        if: steps.key.outputs.ok == 'true'
+        run: |
+          python eval/arena.py evaluate --json-out pr.json --markdown-out pr.md
+          python - <<'EOF'
+          import json, pathlib
+          pr = json.load(open("pr.json"))
+          base = pathlib.Path("results/latest.json")
+          line = f"**This PR: {pr['passed']}/{pr['total']}**"
+          if base.exists():
+              b = json.loads(base.read_text())
+              if b.get("scenarios_file") == pr["scenarios_file"]:
+                  diff = pr["passed"] - b["passed"]
+                  line += f" vs main: {b['passed']}/{b['total']} ({diff:+d})"
+          body = f"## 🇮🇱 Arena\n\n{line}\n\n" + open("pr.md").read()
+          open("comment.md", "w").write(body[:60000])
+          open(__import__("os").environ["GITHUB_STEP_SUMMARY"], "a").write(body)
+          EOF
+
+      - name: Comment on PR
+        if: steps.key.outputs.ok == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr comment "${{ github.event.pull_request.number }}" --body-file comment.md

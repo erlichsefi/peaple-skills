@@ -21,6 +21,18 @@ Israeli citizens have skills too. Nobody wrote them down. Until now.
 | [ma-pitom](skills/ma-pitom/SKILL.md) | Reject every suggestion with "מה פתאום", then adopt it a week later as your own idea. |
 | [lo-nora](skills/lo-nora/SKILL.md) | Incident response: "לא נורא", "יהיה בסדר", no postmortem. |
 
+## The Arena 🏟️
+
+Every day an LLM invents new everyday Israeli situations, along with how a true Israeli would react.
+A simulated agent then faces them with only the skills in this repo. A strict judge scores the result.
+
+Without skills, the agent is a polite, rule-following person who pays full price and waits at the back of the line.
+Every skill you add makes it a little more Israeli.
+
+- Today's score and the **Skills wanted** list: [`results/latest.md`](results/latest.md)
+- Score over time: [`results/history.csv`](results/history.csv)
+- How it works and how to add a skill: [CONTRIBUTING.md](CONTRIBUTING.md)
+
 ## Structure
 
 Each skill lives in its own folder:
@@ -29,8 +41,11 @@ Each skill lives in its own folder:
 skills/
   <skill-name>/
     SKILL.md   # frontmatter (name, description) + instructions
+eval/          # the arena runner and its prompts
+scenarios/     # generated scenarios, one file per day
+results/       # daily scores
 ```
 
 ## Contributing
 
-Open a PR. If your PR is rejected, please DM the maintainer and explain that your case is different.
+See [CONTRIBUTING.md](CONTRIBUTING.md), then open a PR. If your PR is rejected, please DM the maintainer and explain that your case is different.
