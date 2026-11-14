@@ -69,6 +69,8 @@ class LLM:
         if not self.api_key:
             sys.exit("LLM_API_KEY is not set. See CONTRIBUTING.md for free providers.")
         self.base_url = env("LLM_BASE_URL", DEFAULT_BASE_URL).rstrip("/")
+        self.min_interval = float(env("LLM_MIN_INTERVAL", "2"))
+        self.timeout = float(env("LLM_TIMEOUT", "240"))
         configured = [m.strip() for m in env("LLM_MODEL", DEFAULT_MODELS).split(",") if m.strip()]
         catalog = self.list_models()
         if catalog:
@@ -84,8 +86,6 @@ class LLM:
             sys.exit("None of the candidate models answered. Set LLM_MODEL to a model that works on your key.")
         print(f"Using: {', '.join(self.models)}", file=sys.stderr)
         self.model = self.models[0]
-        self.min_interval = float(env("LLM_MIN_INTERVAL", "2"))
-        self.timeout = float(env("LLM_TIMEOUT", "240"))
         self._last_call = 0.0
         self.calls = 0
 
