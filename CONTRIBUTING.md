@@ -11,7 +11,7 @@ behavior a stereotypical Israeli would show. Then it runs a simulated agent thro
    rule-following person from nowhere in particular. It pays full price and goes to the back of the line.
 4. **Judge**: a strict judge checks every expected behavior. A scenario passes only if all are met.
 
-Results land in [`results/latest.md`](results/latest.md), with a **Skills wanted** list of what failed
+Results land on the [results site](https://erlichsefi.github.io/peaple-skills/) and in [`results/latest.md`](results/latest.md), with a **Skills wanted** list of what failed
 and a suggested skill for each. Your job: add or improve skills until the agent passes.
 
 ## Adding a skill
@@ -66,6 +66,7 @@ Free tiers have per-minute limits, so the runner waits `LLM_MIN_INTERVAL` second
 ## Repo setup (maintainers)
 
 - Add a repository secret `LLM_API_KEY`.
+- Settings → Pages → Source: **GitHub Actions** (publishes the results site).
 - Optional repository variables `LLM_BASE_URL` and `LLM_MODEL` to switch provider or model.
 - PRs from forks don't get secrets, so the PR arena skips them. A maintainer can run it locally,
   or the next daily run will score the merged skills.

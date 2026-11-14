@@ -29,6 +29,7 @@ A simulated agent then faces them with only the skills in this repo. A strict ju
 Without skills, the agent is a polite, rule-following person who pays full price and waits at the back of the line.
 Every skill you add makes it a little more Israeli.
 
+- **Live results site: https://erlichsefi.github.io/peaple-skills/**
 - Today's score and the **Skills wanted** list: [`results/latest.md`](results/latest.md)
 - Score over time: [`results/history.csv`](results/history.csv)
 - How it works and how to add a skill: [CONTRIBUTING.md](CONTRIBUTING.md)

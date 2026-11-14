@@ -57,3 +57,11 @@ jobs:
           git commit -m "Arena: $(date -u +%F) results"
           git pull --rebase
           git push
+
+  publish:
+    needs: arena
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
